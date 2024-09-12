@@ -47,6 +47,6 @@ func main() {
 		UserWithID(123),
 		UserWithNumberAppend(1),
 		UserWithNilEmail(),
-    )
+	)
 }
 ```

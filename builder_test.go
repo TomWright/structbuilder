@@ -30,8 +30,10 @@ type User struct {
 			exp: internal.GeneratedFileHeader + `
 package models
 
+// BuildUserOption is a function that sets the given options on a User.
 type BuildUserOption func(*User)
 
+// BuildUser creates a new User with the given options.
 func BuildUser(opts ...BuildUserOption) *User {
 	res := new(User)
 	for _, opt := range opts {
@@ -40,6 +42,7 @@ func BuildUser(opts ...BuildUserOption) *User {
 	return res
 }
 
+// UserWithID sets ID to the given value.
 func UserWithID(v int) BuildUserOption {
 	return func(u *User) {
 		u.ID = v
@@ -74,8 +77,10 @@ import (
 	"some/other/package/xyz"
 )
 
+// BuildUserOption is a function that sets the given options on a User.
 type BuildUserOption func(*User)
 
+// BuildUser creates a new User with the given options.
 func BuildUser(opts ...BuildUserOption) *User {
 	res := new(User)
 	for _, opt := range opts {
@@ -84,12 +89,14 @@ func BuildUser(opts ...BuildUserOption) *User {
 	return res
 }
 
+// UserWithID sets ID to the given value.
 func UserWithID(v int) BuildUserOption {
 	return func(u *User) {
 		u.ID = v
 	}
 }
 
+// UserWithOther sets Other to the given value.
 func UserWithOther(v xyz.Thing) BuildUserOption {
 	return func(u *User) {
 		u.Other = v
@@ -106,6 +113,7 @@ import (
 	"encoding/json"
 
 	"github.com/TomWright/structbuilder/abc"
+	"github.com/TomWright/structbuilder/foo/v2"
 )
 
 //go:generate structbuilder -source=model.go -destination=model_builder.go -target=User
@@ -117,6 +125,7 @@ type User struct {
 	Something abc.Something
 	Else      *abc.Else
 	Numbers   []int
+	Foo       foo.Foo
 
 	iAmInternal string
 }
@@ -130,10 +139,13 @@ package example
 
 import (
 	"github.com/TomWright/structbuilder/abc"
+	"github.com/TomWright/structbuilder/foo/v2"
 )
 
+// BuildUserOption is a function that sets the given options on a User.
 type BuildUserOption func(*User)
 
+// BuildUser creates a new User with the given options.
 func BuildUser(opts ...BuildUserOption) *User {
 	res := new(User)
 	for _, opt := range opts {
@@ -142,81 +154,101 @@ func BuildUser(opts ...BuildUserOption) *User {
 	return res
 }
 
+// UserWithID sets ID to the given value.
 func UserWithID(v int) BuildUserOption {
 	return func(u *User) {
 		u.ID = v
 	}
 }
 
+// UserWithName sets Name to the given value.
 func UserWithName(v string) BuildUserOption {
 	return func(u *User) {
 		u.Name = v
 	}
 }
 
+// UserWithEmail sets Email to the given value.
 func UserWithEmail(v *string) BuildUserOption {
 	return func(u *User) {
 		u.Email = v
 	}
 }
 
+// UserWithNilEmail sets Email to nil.
 func UserWithNilEmail() BuildUserOption {
 	return func(u *User) {
 		u.Email = nil
 	}
 }
 
+// UserWithEmailValue sets Email to the given value.
 func UserWithEmailValue(v string) BuildUserOption {
 	return func(u *User) {
 		u.Email = &v
 	}
 }
 
+// UserWithSomething sets Something to the given value.
 func UserWithSomething(v abc.Something) BuildUserOption {
 	return func(u *User) {
 		u.Something = v
 	}
 }
 
+// UserWithElse sets Else to the given value.
 func UserWithElse(v *abc.Else) BuildUserOption {
 	return func(u *User) {
 		u.Else = v
 	}
 }
 
+// UserWithNilElse sets Else to nil.
 func UserWithNilElse() BuildUserOption {
 	return func(u *User) {
 		u.Else = nil
 	}
 }
 
+// UserWithElseValue sets Else to the given value.
 func UserWithElseValue(v abc.Else) BuildUserOption {
 	return func(u *User) {
 		u.Else = &v
 	}
 }
 
+// UserWithNumbers sets Numbers to the given value.
 func UserWithNumbers(v []int) BuildUserOption {
 	return func(u *User) {
 		u.Numbers = v
 	}
 }
 
+// UserWithNilNumbers sets Numbers to nil.
 func UserWithNilNumbers() BuildUserOption {
 	return func(u *User) {
 		u.Numbers = nil
 	}
 }
 
+// UserWithEmptyNumbers sets Numbers to an empty slice.
 func UserWithEmptyNumbers() BuildUserOption {
 	return func(u *User) {
 		u.Numbers = make([]int, 0)
 	}
 }
 
+// UserWithNumbersAppend appends the given value to Numbers.
 func UserWithNumbersAppend(v int) BuildUserOption {
 	return func(u *User) {
 		u.Numbers = append(u.Numbers, v)
+	}
+}
+
+// UserWithFoo sets Foo to the given value.
+func UserWithFoo(v foo.Foo) BuildUserOption {
+	return func(u *User) {
+		u.Foo = v
 	}
 }
 `,
@@ -230,7 +262,7 @@ func UserWithNumbersAppend(v int) BuildUserOption {
 			in := &bytes.Buffer{}
 			in.WriteString(tc.in)
 
-			if err := structbuilder.Build(tc.targetStruct, tc.destPackage, in, out); err != nil {
+			if err := structbuilder.Build(tc.targetStruct, tc.destPackage, "", in, out); err != nil {
 				t.Fatal(err)
 			}
 

@@ -10,10 +10,11 @@ import (
 )
 
 var (
-	destination = flag.String("destination", "", "The destination file")
-	packageName = flag.String("package", "", "The destination package name")
-	target      = flag.String("target", "", "The target struct in the source file")
-	source      = flag.String("source", "", "The source file")
+	destination   = flag.String("destination", "", "The destination file")
+	packageName   = flag.String("package", "", "The destination package name")
+	target        = flag.String("target", "", "The target struct in the source file")
+	source        = flag.String("source", "", "The source file")
+	sourcePackage = flag.String("source-package", "", "The source package")
 )
 
 func main() {
@@ -46,7 +47,7 @@ func main() {
 	}
 	defer outF.Close()
 
-	if err := structbuilder.Build(strings.Split(*target, ","), *packageName, f, outF); err != nil {
+	if err := structbuilder.Build(strings.Split(*target, ","), *packageName, *sourcePackage, f, outF); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

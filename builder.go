@@ -9,7 +9,7 @@ import (
 	"github.com/TomWright/structbuilder/internal"
 )
 
-func Build(structNames []string, destPackage string, r io.Reader, w io.Writer) error {
+func Build(structNames []string, destPackage string, sourcePackage string, r io.Reader, w io.Writer) error {
 	bytes, err := io.ReadAll(r)
 	if err != nil {
 		return fmt.Errorf("failed to read source: %w", err)
@@ -25,9 +25,18 @@ func Build(structNames []string, destPackage string, r io.Reader, w io.Writer) e
 		destPackage = f.Name.String()
 	}
 
-	structs := make([]internal.StructData, 0)
 	imports := internal.NewImports()
 	imports.AddFromFile(f)
+
+	var sourcePackageAlias string
+	if sourcePackage != "" {
+		sourcePackageAlias = imports.Add(sourcePackage)
+	}
+
+	renderers := make([]internal.Renderer, 0)
+
+	renderers = append(renderers, internal.NewHeaderRenderer(destPackage, internal.GeneratedFileHeader))
+	renderers = append(renderers, imports)
 
 	for _, structName := range structNames {
 		targetTypeSpec, err := internal.FindTargetTypeSpec(f, structName)
@@ -35,26 +44,16 @@ func Build(structNames []string, destPackage string, r io.Reader, w io.Writer) e
 			return fmt.Errorf("failed to find target type: %w", err)
 		}
 
-		d, err := internal.GetStructData(src, targetTypeSpec, imports)
+		d, err := internal.GetStructData(src, targetTypeSpec, imports, sourcePackageAlias)
 		if err != nil {
 			return fmt.Errorf("failed to get struct data: %w", err)
 		}
 
-		structs = append(structs, d)
+		renderers = append(renderers, d)
 	}
 
-	if err := internal.WriteHeader(w, destPackage); err != nil {
-		return fmt.Errorf("failed to write header: %w", err)
-	}
-
-	if err := internal.WriteImports(w, imports); err != nil {
-		return fmt.Errorf("failed to write imports: %w", err)
-	}
-
-	for _, s := range structs {
-		if err := internal.WriteStructData(w, s); err != nil {
-			return fmt.Errorf("failed to write struct data: %w", err)
-		}
+	if err := internal.Render(w, renderers...); err != nil {
+		return fmt.Errorf("failed to render: %w", err)
 	}
 
 	return nil

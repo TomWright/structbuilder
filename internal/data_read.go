@@ -7,10 +7,11 @@ import (
 	"strings"
 )
 
-func GetStructData(src string, target *ast.TypeSpec, imports *Imports) (StructData, error) {
+func GetStructData(src string, target *ast.TypeSpec, imports *Imports, sourceAlias string) (StructData, error) {
 	res := StructData{
-		structName: target.Name.String(),
-		fields:     make([]FieldData, 0),
+		structName:    target.Name.String(),
+		structPackage: sourceAlias,
+		fields:        make([]FieldData, 0),
 	}
 
 	sType, ok := target.Type.(*ast.StructType)
